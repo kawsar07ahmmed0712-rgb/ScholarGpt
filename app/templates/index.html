@@ -1,0 +1,653 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width,initial-scale=1"
+    >
+
+    <title>RAGScholar</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}?v=4"
+    >
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [
+                    ["\\(", "\\)"],
+                    ["$", "$"]
+                ],
+
+                displayMath: [
+                    ["\\[", "\\]"],
+                    ["$$", "$$"]
+                ],
+
+                processEscapes: true
+            },
+
+            options: {
+                skipHtmlTags: [
+                    "script",
+                    "noscript",
+                    "style",
+                    "textarea",
+                    "pre",
+                    "code"
+                ]
+            }
+        };
+    </script>
+
+    <script
+        defer
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"
+    ></script>
+</head>
+
+
+<body>
+
+<div
+    id="appShell"
+    class="app-shell"
+>
+
+    <!-- ============================= -->
+    <!-- Sidebar -->
+    <!-- ============================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-icon">
+                <i data-lucide="book-open"></i>
+            </div>
+
+            <div>
+                <h1>RAGScholar</h1>
+
+                <p>
+                    Your Academic AI Assistant
+                </p>
+            </div>
+
+        </div>
+
+
+        <button
+            id="newChatBtn"
+            class="new-chat"
+            type="button"
+        >
+
+            <i data-lucide="plus"></i>
+
+            <span>
+                New Chat
+            </span>
+
+        </button>
+
+
+        <div class="search-box">
+
+            <i data-lucide="search"></i>
+
+            <input
+                id="chatSearch"
+                autocomplete="off"
+                placeholder="Search conversations..."
+            >
+
+        </div>
+
+
+        <div
+            id="historyList"
+            class="history"
+        ></div>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="info-card">
+
+                <div class="info-row">
+
+                    <i data-lucide="library"></i>
+
+                    <div>
+                        <strong>
+                            Corpus
+                        </strong>
+
+                        <span id="corpusCount">
+                            Loading...
+                        </span>
+                    </div>
+
+                </div>
+
+
+                <div class="divider"></div>
+
+
+                <div class="info-row">
+
+                    <i data-lucide="cpu"></i>
+
+                    <div>
+
+                        <strong>
+                            Runtime
+                        </strong>
+
+                        <span id="runtimeStatus">
+                            Loading...
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="divider"></div>
+
+
+                <button
+                    id="modelCard"
+                    class="info-row info-button"
+                    type="button"
+                >
+
+                    <i data-lucide="zap"></i>
+
+                    <div>
+
+                        <strong>
+                            Model
+                        </strong>
+
+                        <span id="modelName">
+                            GPT-OSS 120B
+                        </span>
+
+                    </div>
+
+                </button>
+
+            </div>
+
+
+            <button
+                id="settingsCard"
+                class="settings-card"
+                type="button"
+            >
+
+                <i data-lucide="settings"></i>
+
+                <div>
+
+                    <strong>
+                        Settings
+                    </strong>
+
+                    <span>
+                        Profile, model, answer style
+                    </span>
+
+                </div>
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ============================= -->
+    <!-- Main chat -->
+    <!-- ============================= -->
+
+    <main class="main-panel">
+
+        <header class="topbar">
+
+            <div>
+
+                <h2>
+                    RAGScholar
+                </h2>
+
+                <p>
+                    Ask across your indexed textbooks,
+                    papers, surveys and research materials.
+                </p>
+
+            </div>
+
+
+            <div class="profile-chip">
+
+                <span id="userAvatar">
+                    KA
+                </span>
+
+                <span id="userName">
+                    Kawsar Ahmmed
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <div
+            id="chatScroll"
+            class="chat-scroll"
+        >
+
+            <div class="chat-column">
+
+
+                <section
+                    id="welcome"
+                    class="welcome"
+                >
+
+                    <div class="welcome-logo">
+
+                        <i data-lucide="book-open"></i>
+
+                    </div>
+
+
+                    <h2>
+                        What would you like to explore?
+                    </h2>
+
+
+                    <p>
+                        RAGScholar answers from the academic
+                        corpus you already indexed.
+                    </p>
+
+
+                    <div class="suggestions">
+
+                        <button
+                            type="button"
+                            data-suggestion="Explain the Transformer architecture figure."
+                        >
+                            Explain Transformer architecture
+                        </button>
+
+
+                        <button
+                            type="button"
+                            data-suggestion="Which equation defines the standalone softmax function?"
+                        >
+                            Find a specific equation
+                        </button>
+
+
+                        <button
+                            type="button"
+                            data-suggestion="Compare how the corpus discusses GANs and VAEs."
+                        >
+                            Compare concepts across sources
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <div id="messages"></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Composer -->
+
+        <div class="composer-area">
+
+            <form
+                id="composer"
+                class="composer"
+            >
+
+                <button
+                    class="attach-btn"
+                    type="button"
+                    title="RAGScholar searches the indexed corpus"
+                >
+
+                    <i data-lucide="library"></i>
+
+                </button>
+
+
+                <textarea
+                    id="messageInput"
+                    rows="1"
+                    placeholder="Ask anything from the RAGScholar corpus..."
+                ></textarea>
+
+
+                <button
+                    id="sendBtn"
+                    class="send-btn"
+                    type="submit"
+                    title="Send"
+                >
+
+                    <i data-lucide="arrow-up"></i>
+
+                </button>
+
+            </form>
+
+
+            <div class="disclaimer">
+
+                RAGScholar is source-grounded.
+                Verify important conclusions from the cited material.
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- ============================= -->
+    <!-- Source drawer -->
+    <!-- ============================= -->
+
+    <aside
+        id="sourceDrawer"
+        class="source-drawer hidden"
+    >
+
+        <div class="source-toolbar">
+
+            <div class="source-toolbar-title">
+
+                <i data-lucide="book-open"></i>
+
+                <strong id="sourceCount">
+                    Source
+                </strong>
+
+            </div>
+
+
+            <div class="source-actions">
+
+                <button
+                    id="sourcePrev"
+                    type="button"
+                    title="Previous source"
+                >
+                    <i data-lucide="chevron-left"></i>
+                </button>
+
+
+                <button
+                    id="sourceNext"
+                    type="button"
+                    title="Next source"
+                >
+                    <i data-lucide="chevron-right"></i>
+                </button>
+
+
+                <button
+                    id="sourceClose"
+                    type="button"
+                    title="Close sources"
+                >
+                    <i data-lucide="x"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="sourceBody"
+            class="source-body"
+        ></div>
+
+    </aside>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- Model menu -->
+<!-- ============================= -->
+
+<div
+    id="modelMenu"
+    class="model-popover hidden"
+>
+
+    <div class="popover-head">
+
+        <strong>
+            Choose model
+        </strong>
+
+        <span>
+            Groq
+        </span>
+
+    </div>
+
+
+    <div id="modelList"></div>
+
+</div>
+
+
+<!-- ============================= -->
+<!-- Settings -->
+<!-- ============================= -->
+
+<div
+    id="settingsModal"
+    class="modal hidden"
+>
+
+    <div class="settings-modal">
+
+        <div class="modal-head">
+
+            <div>
+
+                <h2>
+                    Settings
+                </h2>
+
+                <p>
+                    Customize the interface and
+                    answer generation.
+                </p>
+
+            </div>
+
+
+            <button
+                id="settingsClose"
+                type="button"
+            >
+                <i data-lucide="x"></i>
+            </button>
+
+        </div>
+
+
+        <div class="settings-section">
+
+            <h3>
+                Profile
+            </h3>
+
+
+            <label>
+
+                <span>
+                    Name
+                </span>
+
+                <input
+                    id="profileName"
+                    autocomplete="off"
+                >
+
+            </label>
+
+
+            <label>
+
+                <span>
+                    Role
+                </span>
+
+                <input
+                    id="profileRole"
+                    autocomplete="off"
+                    placeholder="AI / ML Learner"
+                >
+
+            </label>
+
+        </div>
+
+
+        <div class="settings-section">
+
+            <h3>
+                RAGScholar
+            </h3>
+
+
+            <label>
+
+                <span>
+                    Default model
+                </span>
+
+                <select id="settingsModel"></select>
+
+            </label>
+
+
+            <label>
+
+                <span>
+                    Answer style
+                </span>
+
+                <select id="answerStyle">
+
+                    <option value="concise">
+                        Concise
+                    </option>
+
+                    <option value="balanced">
+                        Balanced
+                    </option>
+
+                    <option value="detailed">
+                        Detailed
+                    </option>
+
+                </select>
+
+            </label>
+
+
+            <label>
+
+                <span>
+                    Reasoning effort
+                </span>
+
+                <select id="reasoningMode">
+
+                    <option value="auto">
+                        Use .env default
+                    </option>
+
+                    <option value="low">
+                        Low
+                    </option>
+
+                    <option value="medium">
+                        Medium
+                    </option>
+
+                    <option value="high">
+                        High
+                    </option>
+
+                </select>
+
+            </label>
+
+        </div>
+
+
+        <div class="modal-footer">
+
+            <button
+                id="settingsCancel"
+                class="secondary-btn"
+                type="button"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                id="settingsSave"
+                class="primary-btn"
+                type="button"
+            >
+                Save changes
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='app.js') }}?v=4"
+></script>
+
+</body>
+</html>
