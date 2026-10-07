@@ -1,0 +1,34 @@
+# Core scientific stack
+numpy
+pandas
+scikit-learn
+requests
+torch
+
+# PDF and document processing
+PyMuPDF
+beautifulsoup4
+lxml
+Pillow
+tqdm
+easyocr
+
+# Notebook environment
+jupyterlab
+ipykernel
+ipython
+
+# RAG retrieval and model inference
+faiss-cpu
+bm25s
+sentence-transformers
+transformers
+accelerate
+
+# MinerU corpus parsing
+mineru[all]
+
+# Web application
+Flask
+python-dotenv
+
