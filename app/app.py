@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+# Main application entry point for RAGScholar
 from collections import OrderedDict, defaultdict
 from datetime import datetime, timezone
 from io import BytesIO
